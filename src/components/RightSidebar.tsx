@@ -96,7 +96,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   const hasBookcase = items.some(
     (item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0
   );
-  const isAssemblyActive = hasBookcase && assemblySelected;
+  const isAssemblyActive = hasBookcase && assemblySelected && deliveryMethod === 'truck';
 
   return (
     <aside className="bg-white p-6 rounded-lg border border-gray-200 shadow-xs lg:w-96 shrink-0 h-fit space-y-6">
@@ -123,21 +123,31 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
       )}
 
       {/* Delivery method breakdown (shown in Payment view as in screenshot 07) */}
-      {view === 'payment' && (
+      {view === 'payment' && deliveryMethod && (
         <div className="space-y-2 border-t border-gray-200 pt-4">
           <h3 className="text-xs font-bold uppercase tracking-wider text-gray-900">Delivery method</h3>
           <div className="flex justify-between text-sm">
             <span className="font-semibold text-gray-900">
-              {deliveryMethod === 'truck' ? 'Truck delivery' : 'Click & collect'}
+              {deliveryMethod === 'parcel'
+                ? 'Parcel delivery'
+                : deliveryMethod === 'truck'
+                ? 'Truck delivery'
+                : 'Click & collect'}
             </span>
             <span className="font-semibold text-gray-900">
               {deliveryMethod === 'truck' ? '$35' : '$10'}
             </span>
           </div>
-          <div className="text-xs text-gray-500">
-            <p>{isAssemblyActive ? 'Delivery and assembly slot' : 'Delivery slot'}</p>
-            <p className="font-medium text-gray-800">10 November 9:00 AM - 12:00 PM</p>
-          </div>
+          {deliveryMethod === 'parcel' ? (
+            <div className="text-xs text-gray-500">
+              <p>Delivered within 3-5 working days</p>
+            </div>
+          ) : (
+            <div className="text-xs text-gray-500">
+              <p>{isAssemblyActive ? 'Delivery and assembly slot' : 'Delivery slot'}</p>
+              <p className="font-medium text-gray-800">10 November 9:00 AM - 12:00 PM</p>
+            </div>
+          )}
         </div>
       )}
 

@@ -7,7 +7,7 @@ import { RightSidebar } from './RightSidebar.tsx';
 
 interface ServicesViewProps {
   items: CartItem[];
-  deliveryMethod: DeliveryMethod;
+  deliveryMethod: DeliveryMethod | null;
   onSelectDeliveryMethod: (method: DeliveryMethod) => void;
   assemblySelected: boolean;
   onToggleAssembly: (selected: boolean) => void;
@@ -126,6 +126,28 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
 
             {/* Delivery Option Cards */}
             <div className="space-y-4">
+              {/* Parcel Delivery - only when bookcase is not in cart (up to 15 kg) */}
+              {!hasBookcase && (
+                <div
+                  onClick={() => onSelectDeliveryMethod('parcel')}
+                  className={`p-5 rounded-md border-2 transition-all cursor-pointer flex justify-between items-center ${
+                    deliveryMethod === 'parcel'
+                      ? 'border-[#0058a3] bg-blue-50/20 shadow-xs'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                  }`}
+                  role="radio"
+                  aria-checked={deliveryMethod === 'parcel'}
+                  tabIndex={0}
+                  onKeyDown={(e) => (e.key === ' ' || e.key === 'Enter') && onSelectDeliveryMethod('parcel')}
+                >
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Parcel delivery</h3>
+                    <p className="text-xs text-gray-600 mt-0.5">Delivered within 3-5 working days</p>
+                  </div>
+                  <div className="text-base font-bold text-gray-950">$10</div>
+                </div>
+              )}
+
               {/* Click & Collect */}
               <div
                 onClick={() => onSelectDeliveryMethod('collect')}
@@ -167,8 +189,8 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
               </div>
             </div>
 
-            {/* Assembly Option - shown if cart has bookcase as in screenshot 05 */}
-            {hasBookcase && (
+            {/* Assembly Option - shown if cart has bookcase and a delivery method is chosen */}
+            {hasBookcase && deliveryMethod === 'truck' && (
               <div className="pt-4 border-t border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 mb-4">Do you need assembly?</h2>
 
@@ -193,85 +215,91 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
               </div>
             )}
 
-            {/* Date and Time Slot Picker (pre-selected as in screenshot 06) */}
-            <div className="pt-6 border-t border-gray-200 space-y-6">
-              <h2 className="text-lg font-bold text-gray-900">Pick a date for delivery:</h2>
+            {/* Date and Time Slot Picker - only for Click & collect and Truck delivery (Parcel delivery has no date/time picker) */}
+            {(deliveryMethod === 'collect' || deliveryMethod === 'truck') && (
+              <div className="pt-6 border-t border-gray-200 space-y-6">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {deliveryMethod === 'collect' ? 'Pick a date for collection:' : 'Pick a date for delivery:'}
+                </h2>
 
-              {/* Month Header */}
-              <div className="text-center">
-                <p className="font-bold text-gray-900 text-sm">November 2026</p>
-              </div>
-
-              {/* Calendar Grid */}
-              <div className="max-w-md mx-auto">
-                <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-700 mb-2">
-                  <span>Mo</span>
-                  <span>Tu</span>
-                  <span>We</span>
-                  <span>Th</span>
-                  <span>Fr</span>
-                  <span>Sa</span>
-                  <span>Su</span>
+                {/* Month Header */}
+                <div className="text-center">
+                  <p className="font-bold text-gray-900 text-sm">November 2026</p>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center text-xs">
-                  {calendarRows.flat().map((item, idx) => {
-                    const isSelected = item.isCurrentMonth && item.day === selectedDate;
+                {/* Calendar Grid */}
+                <div className="max-w-md mx-auto">
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-700 mb-2">
+                    <span>Mo</span>
+                    <span>Tu</span>
+                    <span>We</span>
+                    <span>Th</span>
+                    <span>Fr</span>
+                    <span>Sa</span>
+                    <span>Su</span>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-1 text-center text-xs">
+                    {calendarRows.flat().map((item, idx) => {
+                      const isSelected = item.isCurrentMonth && item.day === selectedDate;
+
+                      return (
+                        <div key={idx} className="h-9 flex items-center justify-center">
+                          {item.disabled ? (
+                            <span
+                              className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
+                                item.isCurrentMonth ? 'text-gray-300' : 'text-gray-200'
+                              }`}
+                            >
+                              {item.day}
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => onSelectDate(item.day)}
+                              className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors cursor-pointer ${
+                                isSelected
+                                  ? 'bg-[#0058a3] text-white'
+                                  : 'text-gray-900 hover:bg-gray-100'
+                              }`}
+                            >
+                              {item.day}
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Time Slots */}
+                <div className="space-y-3 pt-2">
+                  {timeSlots.map((slot) => {
+                    const isSelected = selectedSlot === slot;
 
                     return (
-                      <div key={idx} className="h-9 flex items-center justify-center">
-                        {item.disabled ? (
-                          <span
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs ${
-                              item.isCurrentMonth ? 'text-gray-300' : 'text-gray-200'
-                            }`}
-                          >
-                            {item.day}
-                          </span>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => onSelectDate(item.day)}
-                            className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-colors cursor-pointer ${
-                              isSelected
-                                ? 'bg-[#0058a3] text-white'
-                                : 'text-gray-900 hover:bg-gray-100'
-                            }`}
-                          >
-                            {item.day}
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        key={slot}
+                        type="button"
+                        onClick={() => onSelectSlot(slot)}
+                        className={`w-full p-4 rounded-md border text-left text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
+                          isSelected
+                            ? 'border-[#0058a3] ring-1 ring-[#0058a3] text-gray-950 bg-blue-50/10'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white'
+                        }`}
+                      >
+                        <span>{slot}</span>
+                        {isSelected && <Check className="w-4 h-4 text-[#0058a3]" />}
+                      </button>
                     );
                   })}
                 </div>
               </div>
+            )}
 
-              {/* Time Slots */}
-              <div className="space-y-3 pt-2">
-                {timeSlots.map((slot) => {
-                  const isSelected = selectedSlot === slot;
-
-                  return (
-                    <button
-                      key={slot}
-                      type="button"
-                      onClick={() => onSelectSlot(slot)}
-                      className={`w-full p-4 rounded-md border text-left text-sm font-semibold transition-all cursor-pointer flex items-center justify-between ${
-                        isSelected
-                          ? 'border-[#0058a3] ring-1 ring-[#0058a3] text-gray-950 bg-blue-50/10'
-                          : 'border-gray-200 hover:border-gray-300 text-gray-700 bg-white'
-                      }`}
-                    >
-                      <span>{slot}</span>
-                      {isSelected && <Check className="w-4 h-4 text-[#0058a3]" />}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-6 space-y-4">
+            {/* Action Buttons: If an option is selected, show Continue button. Back to details is always accessible. */}
+            <div className="pt-6 space-y-4">
+              {deliveryMethod !== null && (
                 <button
                   type="button"
                   onClick={onContinue}
@@ -280,17 +308,17 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
                   <span>Continue to payment</span>
                   <ChevronRight className="w-5 h-5" />
                 </button>
+              )}
 
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={onBackToDetails}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-black cursor-pointer"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                    <span>Back to details</span>
-                  </button>
-                </div>
+              <div className={deliveryMethod !== null ? 'text-center' : ''}>
+                <button
+                  type="button"
+                  onClick={onBackToDetails}
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-800 hover:text-black cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Back to details</span>
+                </button>
               </div>
             </div>
           </div>

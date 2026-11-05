@@ -8,7 +8,7 @@ interface DebriefModalProps {
   selectedPayment: string;
   variant: string;
   items: CartItem[];
-  deliveryMethod: DeliveryMethod;
+  deliveryMethod: DeliveryMethod | null;
   assemblySelected: boolean;
 }
 
@@ -87,7 +87,13 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
           <div className="flex justify-between">
             <span className="text-gray-600">Delivery service:</span>
             <span className="font-medium text-gray-900">
-              {deliveryMethod === 'truck' ? 'Truck delivery ($35)' : 'Click & collect ($10)'}
+              {deliveryMethod === 'truck'
+                ? 'Truck delivery ($35)'
+                : deliveryMethod === 'parcel'
+                ? 'Parcel delivery ($10)'
+                : deliveryMethod === 'collect'
+                ? 'Click & collect ($10)'
+                : 'None'}
             </span>
           </div>
           {items.some((item) => item.product.canAssemble && item.quantity > 0) && assemblySelected && (

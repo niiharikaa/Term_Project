@@ -75,12 +75,26 @@ test('checkout services: truck delivery adds $35 ($124 total)', () => {
   assert.equal(totals.total, 124);
 });
 
-test('checkout services and payment: truck delivery + assembly adds $35 + $8.90 ($132.90 total)', () => {
-  const items = [{ product: PRODUCTS.bookcase, quantity: 1 }];
-  const totals = calculateCheckoutTotals(items, 'payment', 'truck', true);
+test('checkout services: parcel delivery adds $10', () => {
+  const items = [{ product: PRODUCTS.lamp, quantity: 1 }];
+  const totals = calculateCheckoutTotals(items, 'services', 'parcel', false);
 
-  assert.equal(totals.productsTotal, 89);
-  assert.equal(totals.deliveryFee, 35);
-  assert.equal(totals.assemblyFee, 8.9);
-  assert.equal(Math.round(totals.total * 100) / 100, 132.9);
+  assert.equal(totals.deliveryFee, 10);
+  assert.equal(totals.total, 59.9);
 });
+
+test('checkout services: assembly fee only applies with truck delivery', () => {
+  const items = [{ product: PRODUCTS.bookcase, quantity: 1 }];
+  const unselectedTotals = calculateCheckoutTotals(items, 'services', null, true);
+  assert.equal(unselectedTotals.assemblyFee, 0);
+  assert.equal(unselectedTotals.total, 89);
+
+  const collectTotals = calculateCheckoutTotals(items, 'services', 'collect', true);
+  assert.equal(collectTotals.assemblyFee, 0);
+  assert.equal(collectTotals.total, 99);
+
+  const truckTotals = calculateCheckoutTotals(items, 'services', 'truck', true);
+  assert.equal(truckTotals.assemblyFee, 8.9);
+  assert.equal(truckTotals.total, 132.9);
+});
+

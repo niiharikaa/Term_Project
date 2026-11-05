@@ -36,7 +36,7 @@ export const PRODUCTS: Record<string, CartProduct> = {
   },
 };
 
-export type DeliveryMethod = 'truck' | 'collect';
+export type DeliveryMethod = 'parcel' | 'collect' | 'truck';
 
 export function formatPriceNumber(num: number): string {
   if (num % 1 === 0) {
@@ -90,12 +90,12 @@ export function calculateCheckoutTotals(
   let deliveryFee = 0;
   if (deliveryMethod === 'truck') {
     deliveryFee = 35;
-  } else if (deliveryMethod === 'collect') {
+  } else if (deliveryMethod === 'collect' || deliveryMethod === 'parcel') {
     deliveryFee = 10;
   }
 
   const hasBookcase = items.some((item) => item.product.canAssemble && item.quantity > 0);
-  const assemblyFee = assemblySelected && hasBookcase ? 8.90 : 0;
+  const assemblyFee = assemblySelected && hasBookcase && deliveryMethod === 'truck' ? 8.90 : 0;
 
   const total = productsTotal + deliveryFee + assemblyFee;
 

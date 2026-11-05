@@ -6,7 +6,7 @@ import { RightSidebar } from './RightSidebar.tsx';
 
 interface PaymentViewProps {
   items: CartItem[];
-  deliveryMethod: DeliveryMethod;
+  deliveryMethod: DeliveryMethod | null;
   assemblySelected: boolean;
   onSelectPayment: (method: string) => void;
   onBackToServices: () => void;

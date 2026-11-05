@@ -34,8 +34,8 @@ export default function App() {
   // Current view
   const [view, setView] = useState<AppView>('cart');
 
-  // Services selections (pre-selected delivery method, date, and slot as in screenshot 06 & 07)
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('truck');
+  // Services selections: no option pre-selected initially as requested
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod | null>(null);
   const [assemblySelected, setAssemblySelected] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<number>(10);
   const [selectedSlot, setSelectedSlot] = useState<string>('9:00 AM - 12:00 PM');
@@ -84,13 +84,14 @@ export default function App() {
       return [...prev, { product: PRODUCTS.bookcase, quantity: 1 }];
     });
     setAssemblySelected(true);
+    setDeliveryMethod((prev) => (prev === 'parcel' ? null : prev));
   };
 
   const handleRestart = () => {
     setDebriefOpen(false);
     setView('cart');
     setItems([{ product: PRODUCTS.lamp, quantity: 1 }]);
-    setDeliveryMethod('truck');
+    setDeliveryMethod(null);
     setAssemblySelected(false);
     setSelectedDate(10);
     setSelectedSlot('9:00 AM - 12:00 PM');
