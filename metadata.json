@@ -1,0 +1,6 @@
+{
+  "name": "COMFY HOME Checkout Experiment",
+  "description": "Variant A of the SMU e-commerce checkout experiment replicating Singapore home furnishing retail flow with transparent cart delivery estimates.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
