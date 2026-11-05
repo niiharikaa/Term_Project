@@ -34,7 +34,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
   onBackToDetails,
   onEditProductInCart,
 }) => {
-  const hasBookcase = items.some((item) => item.product.id === PRODUCTS.bookcase.id);
+  const hasBookcase = items.some(
+    (item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0
+  );
 
   // November 2026 calendar days setup matching screenshot 06
   // Mo Tu We Th Fr Sa Su

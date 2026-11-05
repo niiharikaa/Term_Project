@@ -60,6 +60,9 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
             The brand <strong>&quot;COMFY HOME&quot;</strong> is completely fictional and used strictly as a simulated
             retail environment. No financial information was collected or transmitted.
           </p>
+          <p className="text-gray-800 pt-1.5 border-t border-amber-200/60 leading-relaxed font-medium">
+            In a real order to a 3rd-floor flat with no lift, a $20 no-lift charge would also be paid to the driver &ndash; this checkout did not show it. You saw variant {variant}.
+          </p>
           <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between">
             <span className="font-semibold text-gray-900">Your experimental condition:</span>
             <span className="bg-[#0058a3] text-white font-mono px-2.5 py-0.5 rounded text-xs font-bold">
@@ -87,7 +90,7 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
               {deliveryMethod === 'truck' ? 'Truck delivery ($35)' : 'Click & collect ($10)'}
             </span>
           </div>
-          {assemblySelected && (
+          {items.some((item) => item.product.canAssemble && item.quantity > 0) && assemblySelected && (
             <div className="flex justify-between">
               <span className="text-gray-600">Assembly service:</span>
               <span className="font-medium text-gray-900">Selected (+$8.90)</span>

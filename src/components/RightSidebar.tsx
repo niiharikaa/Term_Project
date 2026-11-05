@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pencil, Heart } from 'lucide-react';
-import { CartItem, DeliveryMethod, calculateCartTotals, calculateCheckoutTotals, formatPrice } from '../utils/pricing.ts';
+import { CartItem, DeliveryMethod, calculateCartTotals, calculateCheckoutTotals, formatPrice, PRODUCTS } from '../utils/pricing.ts';
 import { LumaLampSvg, ArloBookcaseSvg, PaymentMethodLogos } from './ProductThumbnails.tsx';
 
 interface RightSidebarProps {
@@ -93,6 +93,11 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     assemblySelected
   );
 
+  const hasBookcase = items.some(
+    (item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0
+  );
+  const isAssemblyActive = hasBookcase && assemblySelected;
+
   return (
     <aside className="bg-white p-6 rounded-lg border border-gray-200 shadow-xs lg:w-96 shrink-0 h-fit space-y-6">
       {/* Total price header */}
@@ -130,7 +135,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </span>
           </div>
           <div className="text-xs text-gray-500">
-            <p>Delivery and assembly slot</p>
+            <p>{isAssemblyActive ? 'Delivery and assembly slot' : 'Delivery slot'}</p>
             <p className="font-medium text-gray-800">10 November 9:00 AM - 12:00 PM</p>
           </div>
         </div>
@@ -171,7 +176,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             </div>
 
             {/* If bookcase has assembly and assembly was checked */}
-            {item.product.canAssemble && assemblySelected && (view === 'services' || view === 'payment') && (
+            {item.product.canAssemble && isAssemblyActive && (view === 'services' || view === 'payment') && (
               <div className="flex justify-between items-center text-xs text-gray-700 pl-4 py-1 border-l-2 border-gray-300">
                 <span>+ Assembly</span>
                 <span className="font-semibold">$8.90</span>

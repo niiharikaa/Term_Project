@@ -50,9 +50,6 @@ export const ConsentModal: React.FC<ConsentModalProps> = ({ isOpen, onAgree, var
             <li>
               All shipping address fields in checkout are fictional pre-filled placeholders.
             </li>
-            <li>
-              Active Study Condition: <strong>Variant {variant}</strong>.
-            </li>
           </ul>
         </div>
 

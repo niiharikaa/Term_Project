@@ -36,13 +36,23 @@ export default function App() {
 
   // Services selections (pre-selected delivery method, date, and slot as in screenshot 06 & 07)
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('truck');
-  const [assemblySelected, setAssemblySelected] = useState<boolean>(true);
+  const [assemblySelected, setAssemblySelected] = useState<boolean>(false);
   const [selectedDate, setSelectedDate] = useState<number>(10);
   const [selectedSlot, setSelectedSlot] = useState<string>('9:00 AM - 12:00 PM');
 
   // Debrief modal state
   const [debriefOpen, setDebriefOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+
+  // Assembly only applies to the ARLO bookcase. If bookcase is not in cart, reset to unticked.
+  useEffect(() => {
+    const hasBookcase = items.some(
+      (item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0
+    );
+    if (!hasBookcase) {
+      setAssemblySelected(false);
+    }
+  }, [items]);
 
   // Cart item management
   const handleUpdateQuantity = (productId: string, quantity: number) => {
@@ -73,6 +83,7 @@ export default function App() {
       }
       return [...prev, { product: PRODUCTS.bookcase, quantity: 1 }];
     });
+    setAssemblySelected(true);
   };
 
   const handleRestart = () => {
@@ -80,7 +91,7 @@ export default function App() {
     setView('cart');
     setItems([{ product: PRODUCTS.lamp, quantity: 1 }]);
     setDeliveryMethod('truck');
-    setAssemblySelected(true);
+    setAssemblySelected(false);
     setSelectedDate(10);
     setSelectedSlot('9:00 AM - 12:00 PM');
   };
