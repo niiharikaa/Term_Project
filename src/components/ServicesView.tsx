@@ -1,12 +1,15 @@
 import React from 'react';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
-import { CartItem, DeliveryMethod, PRODUCTS } from '../utils/pricing.ts';
+import { CartItem, DeliveryMethod, PRODUCTS, LiftAccessOption, AnchoringOption } from '../utils/pricing.ts';
 import { ArloBookcaseSvg } from './ProductThumbnails.tsx';
 import { AlertBanners } from './AlertBanners.tsx';
 import { RightSidebar } from './RightSidebar.tsx';
 
 interface ServicesViewProps {
   items: CartItem[];
+  variant?: 'A' | 'B';
+  liftAccess?: LiftAccessOption | null;
+  anchoringChoice?: AnchoringOption | null;
   deliveryMethod: DeliveryMethod | null;
   onSelectDeliveryMethod: (method: DeliveryMethod) => void;
   assemblySelected: boolean;
@@ -22,6 +25,9 @@ interface ServicesViewProps {
 
 export const ServicesView: React.FC<ServicesViewProps> = ({
   items,
+  variant = 'A',
+  liftAccess = null,
+  anchoringChoice = null,
   deliveryMethod,
   onSelectDeliveryMethod,
   assemblySelected,
@@ -330,6 +336,9 @@ export const ServicesView: React.FC<ServicesViewProps> = ({
           items={items}
           deliveryMethod={deliveryMethod}
           assemblySelected={assemblySelected}
+          variant={variant}
+          liftAccess={liftAccess}
+          anchoringChoice={anchoringChoice}
           onEditProductInCart={onEditProductInCart}
         />
       </div>

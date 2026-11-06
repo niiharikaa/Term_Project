@@ -97,4 +97,52 @@ test('checkout services: assembly fee only applies with truck delivery', () => {
   assert.equal(truckTotals.assemblyFee, 8.9);
   assert.equal(truckTotals.total, 132.9);
 });
+test('Variant B - lamp only: delivery is Parcel delivery: $10 and estimated total is $59.90', () => {
+  const items = [{ product: PRODUCTS.lamp, quantity: 1 }];
+  const cartTotals = calculateCartTotals(items, 'B');
 
+  assert.equal(cartTotals.deliveryText, 'Parcel delivery: $10');
+  assert.equal(cartTotals.total, 59.9);
+
+  const detailsTotals = calculateCheckoutTotals(items, 'details', null, false, 'B');
+  assert.equal(detailsTotals.total, 59.9);
+});
+
+test('Variant B - bookcase with 3rd-floor no-lift and assembly: total is $152.90 across all steps', () => {
+  const items = [{ product: PRODUCTS.bookcase, quantity: 1 }];
+  // In cart: chose no-lift floor 3-5 and assembly incl. anchoring
+  const cartTotals = calculateCartTotals(items, 'B', 'no-lift-3-5', 'assembly');
+
+  assert.equal(cartTotals.deliveryText, 'Truck delivery (items over 15 kg): $35');
+  assert.equal(cartTotals.noLiftFee, 20);
+  assert.equal(cartTotals.assemblyFee, 8.9);
+  assert.equal(cartTotals.total, 152.9);
+
+  // Consistent total on details
+  const detailsTotals = calculateCheckoutTotals(items, 'details', null, false, 'B', 'no-lift-3-5', 'assembly');
+  assert.equal(detailsTotals.total, 152.9);
+
+  // Consistent total on services
+  const servicesTotals = calculateCheckoutTotals(items, 'services', 'truck', true, 'B', 'no-lift-3-5', 'assembly');
+  assert.equal(servicesTotals.total, 152.9);
+
+  // Consistent total on payment
+  const paymentTotals = calculateCheckoutTotals(items, 'payment', 'truck', true, 'B', 'no-lift-3-5', 'assembly');
+  assert.equal(paymentTotals.total, 152.9);
+
+  // If customer switches to Click & collect on services, delivery drops to $10, no-lift and assembly drop out
+  const collectTotals = calculateCheckoutTotals(items, 'services', 'collect', false, 'B', 'no-lift-3-5', 'assembly');
+  assert.equal(collectTotals.deliveryFee, 10);
+  assert.equal(collectTotals.noLiftFee, 0);
+  assert.equal(collectTotals.assemblyFee, 0);
+  assert.equal(collectTotals.total, 99);
+});
+
+test('Variant B - bookcase with no-lift floor 3-5 and self-anchoring: total is $144', () => {
+  const items = [{ product: PRODUCTS.bookcase, quantity: 1 }];
+  const cartTotals = calculateCartTotals(items, 'B', 'no-lift-3-5', 'self');
+
+  assert.equal(cartTotals.noLiftFee, 20);
+  assert.equal(cartTotals.assemblyFee, 0);
+  assert.equal(cartTotals.total, 144);
+});

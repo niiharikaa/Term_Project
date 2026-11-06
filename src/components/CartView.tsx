@@ -1,11 +1,16 @@
 import React from 'react';
 import { Trash2, Plus, Minus, PlusCircle } from 'lucide-react';
-import { CartItem, PRODUCTS, formatPrice } from '../utils/pricing.ts';
+import { CartItem, PRODUCTS, formatPrice, LiftAccessOption, AnchoringOption } from '../utils/pricing.ts';
 import { LumaLampSvg, ArloBookcaseSvg } from './ProductThumbnails.tsx';
 import { RightSidebar } from './RightSidebar.tsx';
 
 interface CartViewProps {
   items: CartItem[];
+  variant?: 'A' | 'B';
+  liftAccess?: LiftAccessOption | null;
+  onSelectLiftAccess?: (option: LiftAccessOption) => void;
+  anchoringChoice?: AnchoringOption | null;
+  onSelectAnchoring?: (option: AnchoringOption) => void;
   onUpdateQuantity: (productId: string, quantity: number) => void;
   onRemoveItem: (productId: string) => void;
   onAddBookcase: () => void;
@@ -14,6 +19,11 @@ interface CartViewProps {
 
 export const CartView: React.FC<CartViewProps> = ({
   items,
+  variant = 'A',
+  liftAccess = null,
+  onSelectLiftAccess,
+  anchoringChoice = null,
+  onSelectAnchoring,
   onUpdateQuantity,
   onRemoveItem,
   onAddBookcase,
@@ -126,6 +136,117 @@ export const CartView: React.FC<CartViewProps> = ({
                           Move to favourites
                         </button>
                       </div>
+
+                      {/* Variant B: F4 Anchoring Card & F3 Lift Access Question under Bookcase */}
+                      {variant === 'B' && item.product.id === PRODUCTS.bookcase.id && (
+                        <div className="mt-6 pt-5 border-t border-gray-200 space-y-4">
+                          {/* F4: Anchoring calm info card */}
+                          <div className="bg-[#f9fafb] border border-gray-200 rounded-lg p-4 space-y-3">
+                            <p className="text-xs sm:text-sm font-medium text-gray-800">
+                              This bookcase must be anchored to the wall to prevent tip-over.
+                            </p>
+                            <div className="space-y-2 text-xs sm:text-sm">
+                              <label
+                                className={`flex items-center gap-3 p-3 bg-white rounded-md border transition-all cursor-pointer ${
+                                  anchoringChoice === 'assembly'
+                                    ? 'border-[#0058a3] ring-1 ring-[#0058a3] bg-blue-50/20'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="anchoring-choice"
+                                  checked={anchoringChoice === 'assembly'}
+                                  onChange={() => onSelectAnchoring?.('assembly')}
+                                  className="w-4 h-4 text-[#0058a3] focus:ring-[#0058a3] cursor-pointer"
+                                />
+                                <span className="font-semibold text-gray-900">
+                                  Add assembly incl. anchoring (+$8.90)
+                                </span>
+                              </label>
+
+                              <label
+                                className={`flex items-center gap-3 p-3 bg-white rounded-md border transition-all cursor-pointer ${
+                                  anchoringChoice === 'self'
+                                    ? 'border-[#0058a3] ring-1 ring-[#0058a3] bg-blue-50/20'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="anchoring-choice"
+                                  checked={anchoringChoice === 'self'}
+                                  onChange={() => onSelectAnchoring?.('self')}
+                                  className="w-4 h-4 text-[#0058a3] focus:ring-[#0058a3] cursor-pointer"
+                                />
+                                <span className="text-gray-800">I&apos;ll anchor it myself (kit included)</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* F3: Lift access question */}
+                          <div className="bg-[#f9fafb] border border-gray-200 rounded-lg p-4 space-y-3">
+                            <h3 className="text-xs sm:text-sm font-bold text-gray-900">Lift access?</h3>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs sm:text-sm">
+                              <label
+                                className={`flex items-center gap-2.5 p-3 bg-white rounded-md border transition-all cursor-pointer ${
+                                  liftAccess === 'lift'
+                                    ? 'border-[#0058a3] ring-1 ring-[#0058a3] bg-blue-50/20'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="lift-access"
+                                  checked={liftAccess === 'lift'}
+                                  onChange={() => onSelectLiftAccess?.('lift')}
+                                  className="w-4 h-4 text-[#0058a3] focus:ring-[#0058a3] cursor-pointer"
+                                />
+                                <span className="text-gray-900 font-medium">Lift</span>
+                              </label>
+
+                              <label
+                                className={`flex items-center gap-2.5 p-3 bg-white rounded-md border transition-all cursor-pointer ${
+                                  liftAccess === 'no-lift-1-2'
+                                    ? 'border-[#0058a3] ring-1 ring-[#0058a3] bg-blue-50/20'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="lift-access"
+                                  checked={liftAccess === 'no-lift-1-2'}
+                                  onChange={() => onSelectLiftAccess?.('no-lift-1-2')}
+                                  className="w-4 h-4 text-[#0058a3] focus:ring-[#0058a3] cursor-pointer"
+                                />
+                                <span className="text-gray-900 font-medium">No lift, floor 1–2</span>
+                              </label>
+
+                              <label
+                                className={`flex items-center gap-2.5 p-3 bg-white rounded-md border transition-all cursor-pointer ${
+                                  liftAccess === 'no-lift-3-5'
+                                    ? 'border-[#0058a3] ring-1 ring-[#0058a3] bg-blue-50/20'
+                                    : 'border-gray-200 hover:border-gray-300'
+                                }`}
+                              >
+                                <input
+                                  type="radio"
+                                  name="lift-access"
+                                  checked={liftAccess === 'no-lift-3-5'}
+                                  onChange={() => onSelectLiftAccess?.('no-lift-3-5')}
+                                  className="w-4 h-4 text-[#0058a3] focus:ring-[#0058a3] cursor-pointer"
+                                />
+                                <span className="text-gray-900 font-medium">No lift, floor 3–5</span>
+                              </label>
+                            </div>
+                            {liftAccess === 'no-lift-3-5' && (
+                              <p className="text-xs text-amber-900 bg-amber-50 border border-amber-200/80 p-2.5 rounded font-medium">
+                                No-lift charge, paid to driver: +$20
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -167,6 +288,9 @@ export const CartView: React.FC<CartViewProps> = ({
         <RightSidebar
           view="cart"
           items={items}
+          variant={variant}
+          liftAccess={liftAccess}
+          anchoringChoice={anchoringChoice}
           onCheckOut={onCheckOut}
         />
       </div>

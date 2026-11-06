@@ -1,6 +1,15 @@
 import React from 'react';
 import { Pencil, Heart } from 'lucide-react';
-import { CartItem, DeliveryMethod, calculateCartTotals, calculateCheckoutTotals, formatPrice, PRODUCTS } from '../utils/pricing.ts';
+import {
+  CartItem,
+  DeliveryMethod,
+  LiftAccessOption,
+  AnchoringOption,
+  calculateCartTotals,
+  calculateCheckoutTotals,
+  formatPrice,
+  PRODUCTS,
+} from '../utils/pricing.ts';
 import { LumaLampSvg, ArloBookcaseSvg, PaymentMethodLogos } from './ProductThumbnails.tsx';
 
 interface RightSidebarProps {
@@ -8,6 +17,9 @@ interface RightSidebarProps {
   items: CartItem[];
   deliveryMethod?: DeliveryMethod | null;
   assemblySelected?: boolean;
+  variant?: 'A' | 'B';
+  liftAccess?: LiftAccessOption | null;
+  anchoringChoice?: AnchoringOption | null;
   onCheckOut?: () => void;
   onEditProductInCart?: () => void;
 }
@@ -17,16 +29,21 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
   items,
   deliveryMethod = null,
   assemblySelected = false,
+  variant = 'A',
+  liftAccess = null,
+  anchoringChoice = null,
   onCheckOut,
   onEditProductInCart,
 }) => {
   if (view === 'cart') {
-    const { productCount, productsTotal, deliveryText, subtotal } = calculateCartTotals(items);
-    const subtotalFormatted = formatPrice(subtotal);
+    const cartTotals = calculateCartTotals(items, variant, liftAccess, anchoringChoice);
+    const subtotalFormatted = formatPrice(cartTotals.total);
     // Split for superscript cents display if needed
     const parts = subtotalFormatted.split('.');
     const dollarPart = parts[0];
     const centPart = parts[1];
+    const hasBulky = cartTotals.hasBulky;
+    const hasBookcase = items.some((item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0);
 
     return (
       <aside className="bg-white p-6 rounded-lg border border-gray-200 shadow-xs lg:w-96 shrink-0 h-fit">
@@ -34,20 +51,53 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
 
         <div className="space-y-3 text-sm text-gray-800">
           <div className="flex justify-between items-center">
-            <span>Products ({productCount})</span>
-            <span className="font-semibold">{formatPrice(productsTotal)}</span>
+            <span>Products ({cartTotals.productCount})</span>
+            <span className="font-semibold">{formatPrice(cartTotals.productsTotal)}</span>
           </div>
-          <div className="flex justify-between items-center">
-            <span>Delivery price</span>
-            <span className="font-semibold">{deliveryText}</span>
-          </div>
+
+          {variant === 'B' ? (
+            <>
+              {/* F1: Replace Delivery price From $10/From $35 with the delivery for this cart, without From */}
+              <div className="flex justify-between items-center">
+                <span>{hasBulky ? 'Truck delivery (items over 15 kg)' : 'Parcel delivery'}</span>
+                <span className="font-semibold">{hasBulky ? '$35' : '$10'}</span>
+              </div>
+
+              {/* F4: Assembly incl. anchoring if chosen */}
+              {hasBookcase && anchoringChoice === 'assembly' && (
+                <div className="flex justify-between items-center text-sm">
+                  <span>Assembly incl. anchoring</span>
+                  <span className="font-semibold">+$8.90</span>
+                </div>
+              )}
+
+              {/* F3: No-lift charge if chosen */}
+              {hasBookcase && liftAccess === 'no-lift-3-5' && (
+                <div className="flex justify-between items-center text-sm text-amber-900 font-medium">
+                  <span>No-lift charge, paid to driver</span>
+                  <span className="font-semibold">+$20</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="flex justify-between items-center">
+              <span>Delivery price</span>
+              <span className="font-semibold">{cartTotals.deliveryText}</span>
+            </div>
+          )}
         </div>
 
         <div className="border-t border-gray-300 my-5" />
 
         <div className="flex justify-between items-baseline mb-4">
           <span className="text-base font-bold text-gray-900">
-            Subtotal <span className="text-xs font-normal text-gray-600 block sm:inline">(excl. assembly fees)</span>
+            {variant === 'B' ? (
+              'Estimated total'
+            ) : (
+              <>
+                Subtotal <span className="text-xs font-normal text-gray-600 block sm:inline">(excl. assembly fees)</span>
+              </>
+            )}
           </span>
           <span className="text-2xl font-black text-gray-950 flex items-baseline tracking-tight">
             <span>{dollarPart}</span>
@@ -62,24 +112,33 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
           </a>
         </p>
 
+        {/* F8: Cart button reads Check out - $[Estimated total] in B */}
         <button
           type="button"
           onClick={onCheckOut}
           disabled={items.length === 0}
           className="w-full bg-[#0058a3] hover:bg-[#004f93] text-white font-bold py-3.5 px-6 rounded-full text-base transition-colors shadow-sm cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Check out
+          {variant === 'B' ? `Check out – ${formatPrice(cartTotals.total)}` : 'Check out'}
         </button>
 
         <div className="mt-5 border-t border-gray-200 pt-4">
           <PaymentMethodLogos />
         </div>
 
-        <div className="mt-5 pt-3 border-t border-gray-200 flex items-center gap-2 text-xs text-gray-700">
-          <Heart className="w-4 h-4 text-gray-600 shrink-0" />
-          <a href="#guarantee" onClick={(e) => e.preventDefault()} className="font-bold underline hover:text-gray-950">
-            365 days to change your mind
-          </a>
+        <div className="mt-5 pt-3 border-t border-gray-200 text-xs text-gray-700">
+          <div className="flex items-center gap-2">
+            <Heart className="w-4 h-4 text-gray-600 shrink-0" />
+            <a href="#guarantee" onClick={(e) => e.preventDefault()} className="font-bold underline hover:text-gray-950">
+              365 days to change your mind
+            </a>
+          </div>
+          {/* F7: Under "365 days to change your mind", add: "Returns: unassembled items in original packaging. Conditions apply." */}
+          {variant === 'B' && (
+            <p className="text-[11px] text-gray-500 mt-1 pl-6">
+              Returns: unassembled items in original packaging. Conditions apply.
+            </p>
+          )}
         </div>
       </aside>
     );
@@ -90,23 +149,57 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
     items,
     view,
     deliveryMethod,
-    assemblySelected
+    assemblySelected,
+    variant,
+    liftAccess,
+    anchoringChoice
   );
 
   const hasBookcase = items.some(
     (item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0
   );
-  const isAssemblyActive = hasBookcase && assemblySelected && deliveryMethod === 'truck';
+  const isAssemblyActive =
+    variant === 'B'
+      ? hasBookcase && (assemblySelected || anchoringChoice === 'assembly') && deliveryMethod !== 'collect'
+      : hasBookcase && assemblySelected && deliveryMethod === 'truck';
 
   return (
     <aside className="bg-white p-6 rounded-lg border border-gray-200 shadow-xs lg:w-96 shrink-0 h-fit space-y-6">
-      {/* Total price header */}
+      {/* Total price / Estimated total header */}
       <div className="flex justify-between items-baseline pb-2 border-b border-gray-200">
-        <span className="text-base font-bold text-gray-900">Total price</span>
+        <span className="text-base font-bold text-gray-900">
+          {variant === 'B' ? 'Estimated total' : 'Total price'}
+        </span>
         <span className="text-3xl font-black text-gray-950 tracking-tight">
           {formatPrice(checkoutTotals.total)}
         </span>
       </div>
+
+      {/* Details View in Variant B: transparent estimate breakdown */}
+      {variant === 'B' && view === 'details' && (
+        <div className="space-y-2 text-xs text-gray-700 bg-gray-50 p-3 rounded border border-gray-100">
+          <div className="flex justify-between">
+            <span>Products</span>
+            <span className="font-semibold text-gray-900">{formatPrice(checkoutTotals.productsTotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>{hasBookcase ? 'Truck delivery (items over 15 kg)' : 'Parcel delivery'}</span>
+            <span className="font-semibold text-gray-900">{formatPrice(checkoutTotals.deliveryFee)}</span>
+          </div>
+          {checkoutTotals.assemblyFee > 0 && (
+            <div className="flex justify-between">
+              <span>Assembly incl. anchoring</span>
+              <span className="font-semibold text-gray-900">+$8.90</span>
+            </div>
+          )}
+          {checkoutTotals.noLiftFee > 0 && (
+            <div className="flex justify-between text-amber-900 font-medium">
+              <span>No-lift charge, paid to driver</span>
+              <span className="font-semibold">+$20</span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Delivery details section (shown in Services and Payment) */}
       {(view === 'services' || view === 'payment') && (
@@ -131,7 +224,7 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
               {deliveryMethod === 'parcel'
                 ? 'Parcel delivery'
                 : deliveryMethod === 'truck'
-                ? 'Truck delivery'
+                ? (variant === 'B' ? 'Truck delivery (items over 15 kg)' : 'Truck delivery')
                 : 'Click & collect'}
             </span>
             <span className="font-semibold text-gray-900">
@@ -146,6 +239,13 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({
             <div className="text-xs text-gray-500">
               <p>{isAssemblyActive ? 'Delivery and assembly slot' : 'Delivery slot'}</p>
               <p className="font-medium text-gray-800">10 November 9:00 AM - 12:00 PM</p>
+            </div>
+          )}
+
+          {variant === 'B' && checkoutTotals.noLiftFee > 0 && deliveryMethod !== 'collect' && (
+            <div className="flex justify-between text-xs pt-1 border-t border-gray-100 text-amber-900 font-medium">
+              <span>No-lift charge, paid to driver</span>
+              <span>+$20</span>
             </div>
           )}
         </div>

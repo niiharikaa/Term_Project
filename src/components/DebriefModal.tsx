@@ -1,15 +1,25 @@
 import React from 'react';
 import { CheckCircle2, RotateCcw } from 'lucide-react';
-import { CartItem, DeliveryMethod, calculateCheckoutTotals, formatPrice } from '../utils/pricing.ts';
+import {
+  CartItem,
+  DeliveryMethod,
+  LiftAccessOption,
+  AnchoringOption,
+  calculateCheckoutTotals,
+  formatPrice,
+  PRODUCTS,
+} from '../utils/pricing.ts';
 
 interface DebriefModalProps {
   isOpen: boolean;
   onRestart: () => void;
   selectedPayment: string;
-  variant: string;
+  variant: 'A' | 'B';
   items: CartItem[];
   deliveryMethod: DeliveryMethod | null;
   assemblySelected: boolean;
+  liftAccess?: LiftAccessOption | null;
+  anchoringChoice?: AnchoringOption | null;
 }
 
 export const DebriefModal: React.FC<DebriefModalProps> = ({
@@ -20,6 +30,8 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
   items,
   deliveryMethod,
   assemblySelected,
+  liftAccess = null,
+  anchoringChoice = null,
 }) => {
   if (!isOpen) return null;
 
@@ -27,8 +39,13 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
     items,
     'payment',
     deliveryMethod,
-    assemblySelected
+    assemblySelected,
+    variant,
+    liftAccess,
+    anchoringChoice
   );
+
+  const hasBookcase = items.some((item) => item.product.id === PRODUCTS.bookcase.id && item.quantity > 0);
 
   return (
     <div
@@ -61,7 +78,9 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
             retail environment. No financial information was collected or transmitted.
           </p>
           <p className="text-gray-800 pt-1.5 border-t border-amber-200/60 leading-relaxed font-medium">
-            In a real order to a 3rd-floor flat with no lift, a $20 no-lift charge would also be paid to the driver &ndash; this checkout did not show it. You saw variant {variant}.
+            {variant === 'B'
+              ? `In a real order to a 3rd-floor flat with no lift, a $20 no-lift charge would also be paid to the driver – this checkout showed it when selected. You saw variant B.`
+              : `In a real order to a 3rd-floor flat with no lift, a $20 no-lift charge would also be paid to the driver – this checkout did not show it. You saw variant A.`}
           </p>
           <div className="pt-2 border-t border-amber-200/60 flex items-center justify-between">
             <span className="font-semibold text-gray-900">Your experimental condition:</span>
@@ -88,7 +107,7 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
             <span className="text-gray-600">Delivery service:</span>
             <span className="font-medium text-gray-900">
               {deliveryMethod === 'truck'
-                ? 'Truck delivery ($35)'
+                ? (variant === 'B' ? 'Truck delivery ($35)' : 'Truck delivery ($35)')
                 : deliveryMethod === 'parcel'
                 ? 'Parcel delivery ($10)'
                 : deliveryMethod === 'collect'
@@ -96,12 +115,35 @@ export const DebriefModal: React.FC<DebriefModalProps> = ({
                 : 'None'}
             </span>
           </div>
-          {items.some((item) => item.product.canAssemble && item.quantity > 0) && assemblySelected && (
+
+          {/* Variant B specific details */}
+          {variant === 'B' && hasBookcase && liftAccess && (
             <div className="flex justify-between">
-              <span className="text-gray-600">Assembly service:</span>
+              <span className="text-gray-600">Lift access response:</span>
+              <span className="font-medium text-gray-900">
+                {liftAccess === 'no-lift-3-5'
+                  ? 'No lift, floor 3–5 (+$20 charge added)'
+                  : liftAccess === 'no-lift-1-2'
+                  ? 'No lift, floor 1–2 ($0)'
+                  : 'Lift ($0)'}
+              </span>
+            </div>
+          )}
+
+          {hasBookcase && (assemblySelected || anchoringChoice === 'assembly') && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Assembly &amp; anchoring:</span>
               <span className="font-medium text-gray-900">Selected (+$8.90)</span>
             </div>
           )}
+
+          {variant === 'B' && hasBookcase && anchoringChoice === 'self' && (
+            <div className="flex justify-between">
+              <span className="text-gray-600">Anchoring plan:</span>
+              <span className="font-medium text-gray-900">I&apos;ll anchor it myself (kit included)</span>
+            </div>
+          )}
+
           <div className="flex justify-between border-t border-gray-200 pt-1.5 font-bold text-gray-900 text-sm">
             <span>Simulated total:</span>
             <span>{formatPrice(checkoutTotals.total)}</span>

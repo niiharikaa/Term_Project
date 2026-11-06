@@ -1,11 +1,14 @@
 import React from 'react';
 import { CreditCard, ChevronLeft, Calendar } from 'lucide-react';
-import { CartItem, DeliveryMethod } from '../utils/pricing.ts';
+import { CartItem, DeliveryMethod, LiftAccessOption, AnchoringOption } from '../utils/pricing.ts';
 import { AlertBanners } from './AlertBanners.tsx';
 import { RightSidebar } from './RightSidebar.tsx';
 
 interface PaymentViewProps {
   items: CartItem[];
+  variant?: 'A' | 'B';
+  liftAccess?: LiftAccessOption | null;
+  anchoringChoice?: AnchoringOption | null;
   deliveryMethod: DeliveryMethod | null;
   assemblySelected: boolean;
   onSelectPayment: (method: string) => void;
@@ -15,6 +18,9 @@ interface PaymentViewProps {
 
 export const PaymentView: React.FC<PaymentViewProps> = ({
   items,
+  variant = 'A',
+  liftAccess = null,
+  anchoringChoice = null,
   deliveryMethod,
   assemblySelected,
   onSelectPayment,
@@ -158,6 +164,9 @@ export const PaymentView: React.FC<PaymentViewProps> = ({
           items={items}
           deliveryMethod={deliveryMethod}
           assemblySelected={assemblySelected}
+          variant={variant}
+          liftAccess={liftAccess}
+          anchoringChoice={anchoringChoice}
           onEditProductInCart={onEditProductInCart}
         />
       </div>

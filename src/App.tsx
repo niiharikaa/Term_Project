@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { CartItem, DeliveryMethod, PRODUCTS } from './utils/pricing.ts';
+import { CartItem, DeliveryMethod, PRODUCTS, LiftAccessOption, AnchoringOption } from './utils/pricing.ts';
 import { Header } from './components/Header.tsx';
 import { CheckoutHeader, CheckoutStep } from './components/CheckoutHeader.tsx';
 import { CartView } from './components/CartView.tsx';
@@ -13,14 +13,58 @@ import { FeedbackButton } from './components/FeedbackButton.tsx';
 type AppView = 'cart' | 'details' | 'services' | 'payment';
 
 export default function App() {
-  // Read ?v= parameter from URL, defaulting to A
-  const variant = useMemo(() => {
+  // Helper to determine active variant from ?v query param or #v=... hash, falling back to localStorage or random assignment
+  const getInitialVariant = (): 'A' | 'B' => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
-      const v = params.get('v');
-      if (v) return v.toUpperCase();
+      let v = params.get('v');
+
+      // If the URL has no ?v, read ?v from the hash too (e.g. #v=B)
+      if (!v && window.location.hash) {
+        const hashStr = window.location.hash.replace(/^[#/]+/, '');
+        const hashParams = new URLSearchParams(hashStr);
+        v = hashParams.get('v');
+        if (!v) {
+          const match = window.location.hash.match(/[#&?]v=([a-zA-Z])/);
+          if (match) {
+            v = match[1];
+          }
+        }
+      }
+
+      if (v) {
+        const upper = v.toUpperCase();
+        if (upper === 'A' || upper === 'B') {
+          return upper;
+        }
+      }
+      const stored = localStorage.getItem('smu_experiment_variant');
+      if (stored === 'A' || stored === 'B') {
+        return stored;
+      }
+      const assigned: 'A' | 'B' = Math.random() < 0.5 ? 'A' : 'B';
+      try {
+        localStorage.setItem('smu_experiment_variant', assigned);
+      } catch {
+        // ignore storage access restrictions if any
+      }
+      return assigned;
     }
     return 'A';
+  };
+
+  const [variant, setVariant] = useState<'A' | 'B'>(getInitialVariant);
+
+  useEffect(() => {
+    const handleHashOrPopState = () => {
+      setVariant(getInitialVariant());
+    };
+    window.addEventListener('hashchange', handleHashOrPopState);
+    window.addEventListener('popstate', handleHashOrPopState);
+    return () => {
+      window.removeEventListener('hashchange', handleHashOrPopState);
+      window.removeEventListener('popstate', handleHashOrPopState);
+    };
   }, []);
 
   // Consent modal state
@@ -40,6 +84,10 @@ export default function App() {
   const [selectedDate, setSelectedDate] = useState<number>(10);
   const [selectedSlot, setSelectedSlot] = useState<string>('9:00 AM - 12:00 PM');
 
+  // Variant B specific state: lift access & anchoring choice
+  const [liftAccess, setLiftAccess] = useState<LiftAccessOption | null>(null);
+  const [anchoringChoice, setAnchoringChoice] = useState<AnchoringOption | null>(null);
+
   // Debrief modal state
   const [debriefOpen, setDebriefOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
@@ -51,6 +99,8 @@ export default function App() {
     );
     if (!hasBookcase) {
       setAssemblySelected(false);
+      setLiftAccess(null);
+      setAnchoringChoice(null);
     }
   }, [items]);
 
@@ -83,8 +133,17 @@ export default function App() {
       }
       return [...prev, { product: PRODUCTS.bookcase, quantity: 1 }];
     });
-    setAssemblySelected(true);
-    setDeliveryMethod((prev) => (prev === 'parcel' ? null : prev));
+
+    if (variant === 'A') {
+      setAssemblySelected(true);
+      setDeliveryMethod((prev) => (prev === 'parcel' ? null : prev));
+    } else {
+      // In B: nothing pre-selected or pre-ticked
+      setAssemblySelected(false);
+      setAnchoringChoice(null);
+      setLiftAccess(null);
+      setDeliveryMethod((prev) => (prev === 'parcel' ? null : prev));
+    }
   };
 
   const handleRestart = () => {
@@ -93,6 +152,8 @@ export default function App() {
     setItems([{ product: PRODUCTS.lamp, quantity: 1 }]);
     setDeliveryMethod(null);
     setAssemblySelected(false);
+    setLiftAccess(null);
+    setAnchoringChoice(null);
     setSelectedDate(10);
     setSelectedSlot('9:00 AM - 12:00 PM');
   };
@@ -122,6 +183,14 @@ export default function App() {
         {view === 'cart' && (
           <CartView
             items={items}
+            variant={variant}
+            liftAccess={liftAccess}
+            onSelectLiftAccess={setLiftAccess}
+            anchoringChoice={anchoringChoice}
+            onSelectAnchoring={(choice) => {
+              setAnchoringChoice(choice);
+              setAssemblySelected(choice === 'assembly');
+            }}
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveItem}
             onAddBookcase={handleAddBookcase}
@@ -132,6 +201,9 @@ export default function App() {
         {view === 'details' && (
           <DetailsView
             items={items}
+            variant={variant}
+            liftAccess={liftAccess}
+            anchoringChoice={anchoringChoice}
             onContinue={() => setView('services')}
             onEditProductInCart={() => setView('cart')}
           />
@@ -140,10 +212,18 @@ export default function App() {
         {view === 'services' && (
           <ServicesView
             items={items}
+            variant={variant}
+            liftAccess={liftAccess}
+            anchoringChoice={anchoringChoice}
             deliveryMethod={deliveryMethod}
             onSelectDeliveryMethod={setDeliveryMethod}
             assemblySelected={assemblySelected}
-            onToggleAssembly={setAssemblySelected}
+            onToggleAssembly={(selected) => {
+              setAssemblySelected(selected);
+              if (variant === 'B') {
+                setAnchoringChoice(selected ? 'assembly' : null);
+              }
+            }}
             selectedDate={selectedDate}
             onSelectDate={setSelectedDate}
             selectedSlot={selectedSlot}
@@ -157,6 +237,9 @@ export default function App() {
         {view === 'payment' && (
           <PaymentView
             items={items}
+            variant={variant}
+            liftAccess={liftAccess}
+            anchoringChoice={anchoringChoice}
             deliveryMethod={deliveryMethod}
             assemblySelected={assemblySelected}
             onSelectPayment={(method) => {
@@ -185,6 +268,8 @@ export default function App() {
         items={items}
         deliveryMethod={deliveryMethod}
         assemblySelected={assemblySelected}
+        liftAccess={liftAccess}
+        anchoringChoice={anchoringChoice}
       />
 
       {/* Floating feedback button matching all screenshots */}

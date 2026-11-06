@@ -1,17 +1,23 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { CartItem } from '../utils/pricing.ts';
+import { CartItem, LiftAccessOption, AnchoringOption } from '../utils/pricing.ts';
 import { AlertBanners } from './AlertBanners.tsx';
 import { RightSidebar } from './RightSidebar.tsx';
 
 interface DetailsViewProps {
   items: CartItem[];
+  variant?: 'A' | 'B';
+  liftAccess?: LiftAccessOption | null;
+  anchoringChoice?: AnchoringOption | null;
   onContinue: () => void;
   onEditProductInCart: () => void;
 }
 
 export const DetailsView: React.FC<DetailsViewProps> = ({
   items,
+  variant = 'A',
+  liftAccess = null,
+  anchoringChoice = null,
   onContinue,
   onEditProductInCart,
 }) => {
@@ -135,6 +141,9 @@ export const DetailsView: React.FC<DetailsViewProps> = ({
         <RightSidebar
           view="details"
           items={items}
+          variant={variant}
+          liftAccess={liftAccess}
+          anchoringChoice={anchoringChoice}
           onEditProductInCart={onEditProductInCart}
         />
       </div>
