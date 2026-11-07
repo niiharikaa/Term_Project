@@ -135,7 +135,7 @@ export default function App() {
     });
 
     if (variant === 'A') {
-      setAssemblySelected(true);
+      setAssemblySelected(false);
       setDeliveryMethod((prev) => (prev === 'parcel' ? null : prev));
     } else {
       // In B: nothing pre-selected or pre-ticked
